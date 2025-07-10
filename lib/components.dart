@@ -1,35 +1,33 @@
-import 'dart:ui';
+import 'dart:ui'; // Needed for ImageFilter in BackdropFilter
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:logger/logger.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-// Global controllers for ContactFormMobile and ContactFormWeb
-final TextEditingController _firstNameController = TextEditingController();
-final TextEditingController _lastNameController = TextEditingController();
-final TextEditingController _phoneController = TextEditingController();
-final TextEditingController _emailController = TextEditingController();
-final TextEditingController _messageController = TextEditingController();
+// Note: TextEditingControllers for ContactFormMobile and ContactFormWeb are not used in this file
+// but are likely used in contact form widgets elsewhere. They manage text input fields.
+// Example: final TextEditingController _firstNameController = TextEditingController();
 
-// Logger instance
-final Logger logger = Logger();
-
-// Sans widget for regular text
+// Sans widget for regular text with OpenSans font
 Widget Sans(String text, double size) {
-  return Text(text, style: GoogleFonts.openSans(fontSize: size));
-}
-
-// SansBold widget for bold text
-Widget SansBold(String text, double size) {
   return Text(
     text,
-    style: GoogleFonts.openSans(fontSize: size, fontWeight: FontWeight.bold),
+    style: GoogleFonts.openSans(
+      fontSize: size,
+    ), // Uses OpenSans font with given size
   );
 }
 
-// Glassmorphism container for skill chips as a StatelessWidget
+// SansBold widget for bold text with OpenSans font
+Widget SansBold(String text, double size) {
+  return Text(
+    text,
+    style: GoogleFonts.openSans(
+      fontSize: size,
+      fontWeight: FontWeight.bold, // Makes text bold
+    ),
+  );
+}
+
+// Glassmorphism container for skill chips (e.g., "Flutter", "Firebase")
 class GlassContainer extends StatelessWidget {
   final String text;
 
@@ -38,13 +36,18 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10.0),
+      borderRadius: BorderRadius.circular(10.0), // Rounded corners
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+        filter: ImageFilter.blur(
+          sigmaX: 5.0,
+          sigmaY: 5.0,
+        ), // Blur for glass effect
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.background.withOpacity(0.15),
+            color: Theme.of(
+              context,
+            ).colorScheme.background.withOpacity(0.15), // Semi-transparent
             borderRadius: BorderRadius.circular(10.0),
             border: Border.all(
               color: Theme.of(
@@ -65,15 +68,15 @@ class GlassContainer extends StatelessWidget {
   }
 }
 
-// Animated card with glassmorphism and continuous motion
+// Animated card with glassmorphism and sliding motion
 class AnimatedCard extends StatefulWidget {
-  final String imagePath;
-  final String text;
-  final BoxFit? fit;
-  final double width;
-  final double? height;
-  final bool reverse;
-  final AnimationController? animationController;
+  final String imagePath; // Path to the image (e.g., "assets/app.png")
+  final String text; // Text to display (e.g., "App Development")
+  final BoxFit? fit; // How the image fits in the card
+  final double width; // Card width
+  final double? height; // Card height (optional)
+  final bool reverse; // Whether to reverse the animation direction
+  final AnimationController? animationController; // Controls animation
 
   const AnimatedCard({
     super.key,
@@ -92,31 +95,38 @@ class AnimatedCard extends StatefulWidget {
 
 class _AnimatedCardState extends State<AnimatedCard>
     with SingleTickerProviderStateMixin {
-  late AnimationController _localController;
-  late Animation<Offset> _slideAnimation;
+  late AnimationController _localController; // Manages animation timing
+  late Animation<Offset> _slideAnimation; // Defines sliding motion
 
   @override
   void initState() {
     super.initState();
+    // Use provided controller or create a new one
     _localController =
-        (widget.animationController ??
+        widget.animationController ??
               AnimationController(
-                duration: const Duration(seconds: 4),
-                vsync: this,
-              ))
-          ..repeat(reverse: true); // Continuous motion
+                duration: const Duration(
+                  seconds: 4,
+                ), // Animation lasts 4 seconds
+                vsync: this, // Syncs animation with screen refresh
+              )
+          ..repeat(reverse: true); // Loops animation back and forth
+    // Define sliding motion from left to right or vice versa
     _slideAnimation =
         Tween<Offset>(
           begin: widget.reverse ? const Offset(-0.2, 0) : const Offset(0.2, 0),
           end: widget.reverse ? const Offset(0.2, 0) : const Offset(-0.2, 0),
         ).animate(
-          CurvedAnimation(parent: _localController, curve: Curves.easeInOut),
+          CurvedAnimation(
+            parent: _localController,
+            curve: Curves.easeInOut,
+          ), // Smooth motion
         );
-    print('AnimatedCard initialized for ${widget.imagePath}');
   }
 
   @override
   void dispose() {
+    // Clean up controller only if it was created locally
     if (widget.animationController == null) {
       _localController.dispose();
     }
@@ -125,19 +135,22 @@ class _AnimatedCardState extends State<AnimatedCard>
 
   @override
   Widget build(BuildContext context) {
-    print('Building AnimatedCard for ${widget.imagePath}');
     return AnimatedBuilder(
       animation: _localController,
       builder: (context, child) {
+        // Slide the card based on animation
         return Transform.translate(
-          offset: _slideAnimation.value * 50, // Adjust amplitude of motion
+          offset: _slideAnimation.value * 50, // Controls slide distance
           child: child,
         );
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20.0),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+          filter: ImageFilter.blur(
+            sigmaX: 5.0,
+            sigmaY: 5.0,
+          ), // Glassmorphism blur
           child: Container(
             width: widget.width,
             height: widget.height,
@@ -162,6 +175,7 @@ class _AnimatedCardState extends State<AnimatedCard>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Display image from assets
                 Image.asset(
                   widget.imagePath,
                   fit: widget.fit ?? BoxFit.cover,
@@ -169,13 +183,7 @@ class _AnimatedCardState extends State<AnimatedCard>
                   height: widget.height != null ? widget.height! - 50 : null,
                 ),
                 const SizedBox(height: 10.0),
-                DefaultTextStyle(
-                  style: GoogleFonts.openSans(
-                    color: Theme.of(context).colorScheme.onBackground,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  child: SansBold(widget.text, 18.0),
-                ),
+                SansBold(widget.text, 18.0), // Bold text below image
               ],
             ),
           ),
@@ -185,7 +193,7 @@ class _AnimatedCardState extends State<AnimatedCard>
   }
 }
 
-// Drawer for mobile
+// Drawer for mobile navigation menu
 class DrawerMobile extends StatelessWidget {
   const DrawerMobile({super.key});
 
@@ -196,7 +204,10 @@ class DrawerMobile extends StatelessWidget {
         context,
       ).colorScheme.background.withOpacity(0.15),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+        filter: ImageFilter.blur(
+          sigmaX: 5.0,
+          sigmaY: 5.0,
+        ), // Glassmorphism effect
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(
@@ -207,40 +218,28 @@ class DrawerMobile extends StatelessWidget {
           ),
           child: ListView(
             children: [
+              // Navigation item for Home
               ListTile(
-                title: DefaultTextStyle(
-                  style: GoogleFonts.openSans(
-                    color: Theme.of(context).colorScheme.onBackground,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  child: SansBold("Home", 20.0),
-                ),
+                title: SansBold("Home", 20.0),
                 onTap: () {
-                  Navigator.pushNamed(context, '/');
+                  Navigator.pushNamed(context, '/'); // Go to home page
                 },
               ),
+              // Navigation item for Work
               ListTile(
-                title: DefaultTextStyle(
-                  style: GoogleFonts.openSans(
-                    color: Theme.of(context).colorScheme.onBackground,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  child: SansBold("Work", 20.0),
-                ),
+                title: SansBold("Work", 20.0),
                 onTap: () {
-                  Navigator.pushNamed(context, '/work');
+                  Navigator.pushNamed(context, '/work'); // Go to work page
                 },
               ),
+              // Navigation item for Contact
               ListTile(
-                title: DefaultTextStyle(
-                  style: GoogleFonts.openSans(
-                    color: Theme.of(context).colorScheme.onBackground,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  child: SansBold("Contact", 20.0),
-                ),
+                title: SansBold("Contact", 20.0),
                 onTap: () {
-                  Navigator.pushNamed(context, '/contact');
+                  Navigator.pushNamed(
+                    context,
+                    '/contact',
+                  ); // Go to contact page
                 },
               ),
             ],
@@ -250,5 +249,3 @@ class DrawerMobile extends StatelessWidget {
     );
   }
 }
-
-// ... (Rest of the code for DrawersWeb, TabsWebList, AddDataFirestore, DialogError, textForm, ContactFormWeb, ContactFormMobile remains unchanged as they are not included)
