@@ -1,0 +1,36 @@
+name: Build iOS
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.6'
+          channel: 'stable'
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Run tests
+        run: flutter test
+      - name: Clean build
+        run: flutter clean
+      - name: Build iOS
+        run: flutter build ios --release --no-codesign
+      - name: Archive and export IPA
+        run: |
+          cd ios
+          if [ ! -f exportOptions.plist ]; then
+            echo "Error: exportOptions.plist not found"
+            exit 1
+          fi
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive
+          xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist exportOptions.plist -exportPath build
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: app-ipa
+          path: build/Runner.ipa
